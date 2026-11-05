@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#172554">
+  <meta name="description" content="Digiviikko on toisen asteen opiskelijoille suunnattu digihyvinvoinnin valintapeli.">
+  <title>Digiviikko – pidä digiarjen tasapaino</title>
+  <style>
+    :root {
+      --ink: #172554;
+      --muted: #5b6479;
+      --paper: #ffffff;
+      --wash: #f3f6ff;
+      --line: #dce3f2;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --violet: #7c3aed;
+      --yellow: #fbbf24;
+      --mint: #14b8a6;
+      --rose: #f43f5e;
+      --shadow: 0 24px 70px rgba(23, 37, 84, .14);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; scroll-behavior: smooth; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 8% 7%, rgba(251, 191, 36, .22), transparent 28rem),
+        radial-gradient(circle at 95% 10%, rgba(124, 58, 237, .16), transparent 30rem),
+        linear-gradient(145deg, #eef4ff 0%, #f8f7ff 55%, #fff8e8 100%);
+      line-height: 1.55;
+    }
+
+    button { font: inherit; }
+    button, [tabindex] { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 4px solid rgba(37, 99, 235, .28); outline-offset: 3px; }
+    .skip-link {
+      position: fixed; left: 12px; top: -80px; z-index: 100;
+      padding: 10px 14px; border-radius: 10px; color: #fff; background: var(--ink);
+    }
+    .skip-link:focus { top: 12px; }
+
+    .shell { width: min(1120px, calc(100% - 28px)); margin: 0 auto; padding: 26px 0 38px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: -.03em; font-size: 1.18rem; }
+    .brand-mark {
+      display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px;
+      color: #fff; background: linear-gradient(135deg, var(--blue), var(--violet)); box-shadow: 0 10px 24px rgba(37,99,235,.24);
+    }
+    .quiet-button {
+      min-height: 42px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px;
+      color: var(--ink); background: rgba(255,255,255,.75); font-weight: 750; cursor: pointer;
+    }
+    .quiet-button:hover { background: #fff; border-color: #b9c5df; }
+
+    .app-card {
+      position: relative; overflow: hidden; min-height: min(790px, calc(100vh - 112px));
+      border: 1px solid rgba(255,255,255,.75); border-radius: 32px; background: rgba(255,255,255,.9);
+      box-shadow: var(--shadow); backdrop-filter: blur(16px);
+    }
+    .screen { display: none; }
+    .screen.active { display: block; animation: rise .36s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* Aloitus */
+    .intro { min-height: min(790px, calc(100vh - 112px)); display: grid; grid-template-columns: 1.12fr .88fr; }
+    .intro-copy { display: flex; flex-direction: column; justify-content: center; padding: clamp(34px, 7vw, 78px); }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px; width: fit-content; margin: 0 0 18px;
+      padding: 7px 12px; border-radius: 999px; color: #4c1d95; background: #ede9fe;
+      font-size: .84rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 700px; margin-bottom: 20px; font-size: clamp(3rem, 7vw, 5.9rem); line-height: .92; letter-spacing: -.075em; }
+    .intro-copy .lead { max-width: 640px; margin-bottom: 25px; color: #37415a; font-size: clamp(1.05rem, 2vw, 1.28rem); }
+    .primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px;
+      padding: 14px 22px; border: 0; border-radius: 16px; color: #fff; background: var(--blue);
+      box-shadow: 0 12px 25px rgba(37,99,235,.24); font-weight: 850; cursor: pointer;
+    }
+    .primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .primary:active { transform: translateY(0); }
+    .intro-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .secondary {
+      min-height: 54px; padding: 13px 19px; border: 1px solid #bdc9e0; border-radius: 16px;
+      color: var(--ink); background: #fff; font-weight: 800; cursor: pointer;
+    }
+    .secondary:hover { border-color: var(--blue); color: var(--blue-dark); }
+    .tiny-note { margin: 18px 0 0; color: var(--muted); font-size: .9rem; }
+
+    .intro-art {
+      position: relative; display: grid; place-items: center; overflow: hidden; padding: 42px;
+      background: linear-gradient(155deg, #172554, #312e81 58%, #5b21b6);
+    }
+    .orbit { position: relative; width: min(370px, 90%); aspect-ratio: 1; border: 1px solid rgba(255,255,255,.17); border-radius: 50%; }
+    .orbit::before, .orbit::after { content: ""; position: absolute; inset: 16%; border: 1px dashed rgba(255,255,255,.22); border-radius: 50%; }
+    .orbit::after { inset: 33%; border-style: solid; }
+    .phone {
+      position: absolute; inset: 23% 31%; display: grid; place-items: center; border: 8px solid #111827;
+      border-radius: 31px; background: linear-gradient(150deg, #fff, #dbeafe); box-shadow: 0 26px 60px rgba(0,0,0,.32);
+      transform: rotate(7deg);
+    }
+    .phone::before { content: ""; position: absolute; top: 7px; width: 36%; height: 6px; border-radius: 99px; background: #111827; }
+    .phone-icon { font-size: clamp(2.6rem, 7vw, 4.6rem); transform: rotate(-7deg); }
+    .float-card {
+      position: absolute; display: grid; place-items: center; width: 88px; height: 88px; border-radius: 24px;
+      background: rgba(255,255,255,.95); box-shadow: 0 14px 28px rgba(0,0,0,.22); font-size: 2.1rem;
+    }
+    .float-card.one { top: 4%; left: 9%; transform: rotate(-8deg); }
+    .float-card.two { right: -2%; top: 42%; transform: rotate(8deg); }
+    .float-card.three { left: 6%; bottom: 2%; transform: rotate(6deg); }
+    .art-caption { position: absolute; right: 24px; bottom: 20px; left: 24px; color: rgba(255,255,255,.72); text-align: center; font-size: .84rem; }
+
+    /* Peli */
+    .game-layout { display: grid; grid-template-columns: 290px 1fr; min-height: min(790px, calc(100vh - 112px)); }
+    .sidebar { padding: 28px; color: #fff; background: linear-gradient(180deg, #172554, #1e1b4b); }
+    .sidebar-kicker { margin-bottom: 18px; color: #a5b4fc; font-size: .78rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .day-list { display: grid; gap: 8px; margin-bottom: 28px; }
+    .day-item { display: flex; align-items: center; gap: 10px; padding: 10px 11px; border-radius: 13px; color: #aeb9d8; font-weight: 760; }
+    .day-dot { width: 24px; height: 24px; display: grid; place-items: center; border: 1px solid #556186; border-radius: 50%; font-size: .72rem; }
+    .day-item.current { color: #fff; background: rgba(255,255,255,.1); }
+    .day-item.current .day-dot { border-color: var(--yellow); color: #172554; background: var(--yellow); }
+    .day-item.done { color: #99f6e4; }
+    .day-item.done .day-dot { border-color: var(--mint); color: #052e2b; background: var(--mint); }
+    .metric-stack { display: grid; gap: 17px; }
+    .metric-row { --metric-color: var(--blue); }
+    .metric-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: .86rem; }
+    .metric-name { display: flex; align-items: center; gap: 7px; color: #dbe5ff; font-weight: 720; }
+    .metric-value { font-weight: 900; font-variant-numeric: tabular-nums; }
+    .meter { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.13); }
+    .meter > span { display: block; width: 50%; height: 100%; border-radius: inherit; background: var(--metric-color); transition: width .45s ease; }
+    .metric-row.bump { animation: bump .48s ease; }
+    @keyframes bump { 50% { transform: translateX(5px); } }
+    .no-game-over { margin-top: 26px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.12); color: #aeb9d8; font-size: .78rem; }
+
+    .play-main { display: flex; flex-direction: column; padding: clamp(24px, 5vw, 56px); }
+    .progress-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 34px; }
+    .progress-copy { color: var(--muted); font-size: .9rem; font-weight: 760; }
+    .progress-track { flex: 1; max-width: 330px; height: 8px; overflow: hidden; border-radius: 99px; background: #e8edf7; }
+    .progress-fill { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--violet)); transition: width .45s ease; }
+    .day-announcement {
+      position: relative; overflow: hidden; width: min(720px, 100%); margin: auto; padding: clamp(34px, 7vw, 64px);
+      border-radius: 28px; color: #fff; background: linear-gradient(135deg, #172554, #3730a3 58%, #6d28d9);
+      box-shadow: 0 22px 50px rgba(49, 46, 129, .24); text-align: center;
+    }
+    .day-announcement::before, .day-announcement::after {
+      content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.08); pointer-events: none;
+    }
+    .day-announcement::before { width: 220px; height: 220px; top: -125px; right: -65px; }
+    .day-announcement::after { width: 150px; height: 150px; bottom: -95px; left: -45px; }
+    .day-announcement[hidden], .scene[hidden] { display: none; }
+    .day-number { position: relative; margin-bottom: 12px; color: #c7d2fe; font-size: .82rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .day-icon { position: relative; display: grid; place-items: center; width: 78px; height: 78px; margin: 0 auto 17px; border-radius: 24px; background: rgba(255,255,255,.13); font-size: 2.4rem; }
+    .day-announcement h2 { position: relative; margin-bottom: 9px; font-size: clamp(3rem, 8vw, 5.2rem); line-height: .95; letter-spacing: -.065em; }
+    .day-theme { position: relative; margin-bottom: 15px; color: #fde68a; font-size: 1.05rem; font-weight: 880; }
+    .day-description { position: relative; max-width: 530px; margin: 0 auto 25px; color: #e0e7ff; font-size: clamp(1rem, 2vw, 1.15rem); }
+    .day-announcement .primary { position: relative; color: #172554; background: #fff; box-shadow: 0 12px 25px rgba(0,0,0,.18); }
+    .day-announcement .primary:hover { color: #172554; background: #f8fafc; }
+    .scene { width: min(720px, 100%); margin: auto; }
+    .scene-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .time-pill { padding: 6px 10px; border-radius: 999px; color: #1e3a8a; background: #dbeafe; font-size: .82rem; font-weight: 850; }
+    .theme-label { color: var(--muted); font-size: .85rem; font-weight: 730; }
+    .scene h2 { margin-bottom: 15px; font-size: clamp(1.9rem, 4.5vw, 3.15rem); line-height: 1.06; letter-spacing: -.045em; }
+    .scene-text { margin-bottom: 24px; color: #3d475f; font-size: clamp(1.02rem, 2vw, 1.18rem); white-space: pre-line; }
+    .question { margin-bottom: 12px; font-weight: 850; }
+    .choices { display: grid; gap: 10px; }
+    .choice {
+      display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 13px; width: 100%; min-height: 64px;
+      padding: 12px 16px; border: 1.5px solid #ccd5e7; border-radius: 17px; color: var(--ink);
+      background: #fff; text-align: left; cursor: pointer; transition: border-color .18s, transform .18s, box-shadow .18s, background .18s;
+    }
+    .choice:hover:not(:disabled) { border-color: var(--blue); transform: translateY(-1px); box-shadow: 0 9px 20px rgba(37,99,235,.1); }
+    .choice-letter { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: #334155; background: #eef2f8; font-weight: 900; }
+    .choice-text { font-weight: 730; }
+    .choice:disabled { cursor: default; }
+    .choice.chosen { border-color: var(--blue); background: #eff6ff; box-shadow: 0 0 0 3px rgba(37,99,235,.08); }
+    .choice.chosen .choice-letter { color: #fff; background: var(--blue); }
+    .choice.dimmed { opacity: .54; }
+
+    .result-panel { display: none; margin-top: 20px; padding: 20px; border: 1px solid #cbdcfb; border-radius: 19px; background: #f4f8ff; }
+    .result-panel.show { display: block; animation: reveal .32s ease both; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .result-title { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; font-size: 1.02rem; font-weight: 900; }
+    .effect-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+    .effect-chip { padding: 6px 10px; border-radius: 999px; color: #1f2937; background: #fff; border: 1px solid #d8e0ef; font-size: .84rem; font-weight: 820; }
+    .effect-chip.positive { color: #065f46; border-color: #99e3d4; background: #ecfdf5; }
+    .effect-chip.negative { color: #9f1239; border-color: #fecdd3; background: #fff1f2; }
+    .feedback { margin-bottom: 17px; color: #3d475f; }
+    .next-row { display: flex; justify-content: flex-end; }
+
+    /* Yhteenveto */
+    .summary { padding: clamp(28px, 6vw, 70px); }
+    .summary-head { max-width: 760px; margin: 0 auto 32px; text-align: center; }
+    .summary-head .eyebrow { margin-inline: auto; }
+    .summary h2 { margin-bottom: 10px; font-size: clamp(2.4rem, 6vw, 4.8rem); line-height: .98; letter-spacing: -.06em; }
+    .summary-lead { color: var(--muted); font-size: 1.08rem; }
+    .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; max-width: 980px; margin: 0 auto 30px; }
+    .score-card { position: relative; overflow: hidden; padding: 20px; border: 1px solid var(--line); border-radius: 20px; background: #fff; }
+    .score-card::after { content: ""; position: absolute; right: -22px; bottom: -30px; width: 90px; height: 90px; border-radius: 50%; background: var(--accent); opacity: .12; }
+    .score-top { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
+    .score-icon { font-size: 1.55rem; }
+    .score-number { font-size: 1.8rem; line-height: 1; font-weight: 950; letter-spacing: -.04em; }
+    .score-name { margin-bottom: 6px; font-weight: 880; }
+    .score-note { margin: 0; color: var(--muted); font-size: .88rem; }
+    .summary-message { max-width: 820px; margin: 0 auto 28px; padding: 22px 24px; border-radius: 20px; color: #fff; background: linear-gradient(115deg, #172554, #3730a3); }
+    .summary-message h3 { margin-bottom: 7px; font-size: 1.35rem; }
+    .summary-message p { margin: 0; color: #dfe6ff; }
+    .reflection { max-width: 820px; margin: 0 auto; padding: 25px; border: 1px solid var(--line); border-radius: 22px; background: #fafbff; }
+    .reflection h3 { margin-bottom: 5px; font-size: 1.35rem; }
+    .reflection > p { color: var(--muted); }
+    .reflection-options { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .reflection-option {
+      min-height: 48px; padding: 10px 13px; border: 1px solid #ccd5e7; border-radius: 13px;
+      color: var(--ink); background: #fff; text-align: left; font-weight: 740; cursor: pointer;
+    }
+    .reflection-option:hover, .reflection-option.selected { border-color: var(--violet); background: #f3e8ff; }
+    .reflection-note { min-height: 28px; margin: 14px 0 0; color: #4c1d95; font-weight: 760; }
+    .summary-actions { display: flex; justify-content: center; gap: 10px; margin-top: 25px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .mobile-metrics { display: none; }
+
+    @media (max-width: 820px) {
+      .shell { width: min(100% - 18px, 680px); padding: 12px 0 24px; }
+      .topbar { margin: 0 4px 10px; }
+      .app-card { min-height: calc(100vh - 82px); border-radius: 24px; }
+      .intro { min-height: calc(100vh - 82px); grid-template-columns: 1fr; }
+      .intro-copy { padding: 36px 25px 26px; }
+      .intro-art { min-height: 300px; }
+      .orbit { width: min(290px, 85%); }
+      .game-layout { grid-template-columns: 1fr; min-height: calc(100vh - 82px); }
+      .sidebar { display: none; }
+      .mobile-metrics { display: block; padding: 14px 18px 12px; color: #fff; background: #172554; }
+      .mobile-day-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: .8rem; font-weight: 820; }
+      .mobile-score-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+      .mobile-score { padding: 7px 5px; border-radius: 10px; background: rgba(255,255,255,.09); text-align: center; }
+      .mobile-score span { display: block; font-size: 1.05rem; }
+      .mobile-score strong { display: block; font-size: .72rem; }
+      .play-main { padding: 22px 19px 28px; }
+      .progress-head { margin-bottom: 25px; }
+      .scene { margin: 0 auto; }
+      .score-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .brand-text { display: none; }
+      .quiet-button { font-size: .83rem; }
+      h1 { font-size: clamp(3rem, 18vw, 4.3rem); }
+      .intro-art { min-height: 255px; }
+      .float-card { width: 68px; height: 68px; border-radius: 18px; font-size: 1.65rem; }
+      .play-main { padding-inline: 15px; }
+      .progress-track { max-width: 150px; }
+      .scene h2 { font-size: 2rem; }
+      .choice { grid-template-columns: 34px 1fr; padding: 11px 12px; }
+      .summary { padding: 30px 15px; }
+      .score-grid, .reflection-options { grid-template-columns: 1fr; }
+      .summary-actions { flex-direction: column; }
+      .summary-actions button { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Siirry sisältöön</a>
+  <div class="shell">
+    <header class="topbar" aria-label="Pelin ylätunniste">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">D</span><span class="brand-text">DIGIVIIKKO</span></div>
+      <button class="quiet-button" id="restartTop" type="button" hidden>Aloita alusta</button>
+    </header>
+
+    <main class="app-card" id="main">
+      <section class="screen active" id="introScreen" aria-labelledby="introTitle">
+        <div class="intro">
+          <div class="intro-copy">
+            <p class="eyebrow">5 päivää · 25 valintaa</p>
+            <h1 id="introTitle">Pidä digiarki tasapainossa.</h1>
+            <p class="lead">Edessä on tavallinen opiskeluviikko. Teet valintoja opiskelusta, puhelimesta, somesta, pelaamisesta, vapaa-ajasta ja levosta.</p>
+            <div class="intro-actions">
+              <button class="primary" id="startButton" type="button">Aloita viikko <span aria-hidden="true">→</span></button>
+              <button class="secondary" id="continueButton" type="button" hidden>Jatka kesken olevaa viikkoa</button>
+            </div>
+            <p class="tiny-note">Valinnoilla on seurauksia. Täydellisiä pisteitä ei tarvitse saada, eikä pelissä voi hävitä.</p>
+          </div>
+          <div class="intro-art" aria-hidden="true">
+            <div class="orbit">
+              <div class="phone"><span class="phone-icon">⚖️</span></div>
+              <div class="float-card one">🧠</div>
+              <div class="float-card two">👥</div>
+              <div class="float-card three">🌙</div>
+            </div>
+            <div class="art-caption">Pelikierros kestää noin 15–20 minuuttia.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="gameScreen" aria-label="Digiviikko käynnissä">
+        <div class="game-layout">
+          <aside class="sidebar" aria-label="Viikon eteneminen ja mittarit">
+            <div class="sidebar-kicker">Viikon eteneminen</div>
+            <div class="day-list" id="dayList"></div>
+            <div class="sidebar-kicker">Mittarit</div>
+            <div class="metric-stack" id="metricStack"></div>
+            <div class="no-game-over">Mittarit voivat laskea nollaan, mutta viikko jatkuu aina perjantaihin asti.</div>
+          </aside>
+
+          <div>
+            <div class="mobile-metrics" aria-label="Päivä ja mittarit">
+              <div class="mobile-day-row"><span id="mobileDay">Maanantai</span><span id="mobileProgress">Päivä 1 / 5</span></div>
+              <div class="mobile-score-row" id="mobileScores"></div>
+            </div>
+            <div class="play-main">
+              <div class="progress-head" aria-label="Pelin eteneminen">
+                <span class="progress-copy" id="progressCopy">Päivä 1 / 5</span>
+                <div class="progress-track" aria-hidden="true"><span class="progress-fill" id="progressFill"></span></div>
+              </div>
+
+              <section class="day-announcement" id="dayAnnouncement" aria-labelledby="dayAnnouncementTitle">
+                <div class="day-number" id="dayNumber">Päivä 1 / 5</div>
+                <div class="day-icon" id="dayIcon" aria-hidden="true">🧠</div>
+                <h2 id="dayAnnouncementTitle" tabindex="-1">Maanantai</h2>
+                <p class="day-theme" id="dayTheme">Keskittyminen</p>
+                <p class="day-description" id="dayDescription"></p>
+                <button class="primary" id="beginDayButton" type="button">Aloita maanantai <span aria-hidden="true">→</span></button>
+              </section>
+
+              <article class="scene" id="sceneArticle" aria-live="polite" hidden>
+                <div class="scene-meta">
+                  <span class="time-pill" id="sceneTime">Klo 9.15</span>
+                  <span class="theme-label" id="sceneTheme">Keskittyminen</span>
+                </div>
+                <h2 id="sceneTitle" tabindex="-1">Ilmoituksia kesken tehtävän</h2>
+                <p class="scene-text" id="sceneText"></p>
+                <p class="question">Mitä teet?</p>
+                <div class="choices" id="choices"></div>
+                <div class="result-panel" id="resultPanel" tabindex="-1">
+                  <div class="result-title"><span aria-hidden="true">↳</span> Valintasi vaikutus</div>
+                  <div class="effect-list" id="effectList"></div>
+                  <p class="feedback" id="feedback"></p>
+                  <div class="next-row"><button class="primary" id="nextButton" type="button">Seuraava tilanne <span aria-hidden="true">→</span></button></div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="summaryScreen" aria-labelledby="summaryTitle">
+        <div class="summary">
+          <div class="summary-head">
+            <p class="eyebrow">Perjantai · Viikko valmis</p>
+            <h2 id="summaryTitle">Viikkosi on ohi.</h2>
+            <p class="summary-lead">Tuloksesi ei ole arvosana. Se näyttää, mihin tämän viikon valinnat vaikuttivat.</p>
+          </div>
+          <div class="score-grid" id="scoreGrid"></div>
+          <div class="summary-message" id="summaryMessage"></div>
+          <div class="reflection">
+            <h3>Mieti vielä yksi asia</h3>
+            <p>Mitä haluaisit kokeilla ensi viikolla?</p>
+            <div class="reflection-options" id="reflectionOptions"></div>
+            <p class="reflection-note" id="reflectionNote" aria-live="polite"></p>
+          </div>
+          <div class="summary-actions">
+            <button class="primary" id="playAgain" type="button">↻ Pelaa uusi viikko</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="sr-only" id="liveRegion" aria-live="assertive"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DAYS = [
+        { name: 'Maanantai', theme: 'Keskittyminen', icon: '🧠', description: 'Harjoittelet keskittymistä ja suojaat työrauhaa puhelimen ja tietokoneen häiriöiltä.' },
+        { name: 'Tiistai', theme: 'Tauot ja jaksaminen', icon: '🔋', description: 'Huomaat, miten tauot, liike ja työasento vaikuttavat jaksamiseen ruudun ääressä.' },
+        { name: 'Keskiviikko', theme: 'Vapaa-aika ja pelaaminen', icon: '🎮', description: 'Pohdit pelaamista, vapaa-aikaa ja yhteydenpitoa kavereihin.' },
+        { name: 'Torstai', theme: 'Some ja tavoitettavuus', icon: '💬', description: 'Teet valintoja somesta, viesteistä ja jatkuvasta tavoitettavuudesta.' },
+        { name: 'Perjantai', theme: 'Palautuminen ja oma tasapaino', icon: '🌙', description: 'Rauhoitat viikon loppua ja etsit itsellesi sopivaa digitasapainoa.' }
+      ];
+
+      const METRICS = {
+        focus: { name: 'Keskittyminen', icon: '🧠', color: '#60a5fa' },
+        energy: { name: 'Jaksaminen', icon: '🔋', color: '#fbbf24' },
+        recovery: { name: 'Palautuminen', icon: '🌙', color: '#a78bfa' },
+        connection: { name: 'Yhteydenpito', icon: '👥', color: '#2dd4bf' }
+      };
+
+      const SITUATIONS = [
+        { id: 1, day: 0, time: 'Klo 9.15', title: 'Puhelimen ilmoitukset kesken tehtävän', text: 'Teet opiskelutehtävää tietokoneella.\nPuhelimeen tulee vähän väliä uusia ilmoituksia.', options: [
+          { text: 'Tarkistan puhelimen viestit heti.', effects: { focus: -2, connection: 1 }, feedback: 'Pysyt viesteissä mukana, mutta tietokoneella tehtävä työ keskeytyy usein.' },
+          { text: 'Laitan puhelimen ilmoitukset hetkeksi pois.', effects: { focus: 2 }, feedback: 'Saat työrauhan tietokoneella. Voit tarkistaa viestit myöhemmin.' },
+          { text: 'Jätän puhelimen näkyville pöydälle.', effects: { focus: -1 }, feedback: 'Näytölle tuleva ilmoitus voi viedä huomion, vaikka et vastaisi siihen.' }
+        ]},
+        { id: 2, day: 0, time: 'Klo 10.40', title: 'Monta välilehteä selaimessa', text: 'Tietokoneen selaimessa on auki tehtävä, video, verkkokauppa, some ja monta muuta välilehteä.', options: [
+          { text: 'Suljen selaimesta turhat välilehdet.', effects: { focus: 2 }, feedback: 'Kaikkea ei tarvitse pitää tietokoneen näytöllä yhtä aikaa.' },
+          { text: 'Jätän kaikki selaimen välilehdet auki.', effects: { focus: -1 }, feedback: 'Moni avoin sivu voi vetää huomiota pois opiskelutehtävästä.' },
+          { text: 'Tallennan kiinnostavat verkkosivut myöhempää käyttöä varten.', effects: { focus: 1 }, feedback: 'Voit palata sivuihin myöhemmin ja keskittyä nyt tehtävään.' }
+        ]},
+        { id: 3, day: 0, time: 'Klo 12.20', title: 'Kaverin viesti kesken opiskelun', text: 'Kaveri lähettää puhelimeesi viestin ja kysyy, mitä kuuluu.\nOlet juuri aloittanut vaikean opiskelutehtävän.', options: [
+          { text: 'Vastaan puhelimella heti pitkän viestin.', effects: { connection: 2, focus: -2 }, feedback: 'Pidät yhteyttä kaveriin, mutta opiskelutehtävän alku katkeaa.' },
+          { text: 'Teen opiskelutehtävän ensin loppuun.', effects: { focus: 2 }, feedback: 'Saat pitää ajatuksen tehtävässä. Voit vastata viestiin myöhemmin.' },
+          { text: 'Vastaan puhelimella lyhyesti ja jatkan tehtävää.', effects: { connection: 1, focus: -1 }, feedback: 'Pidät yhteyttä, mutta huomiosi vaihtuu hetkeksi pois tehtävästä.' }
+        ]},
+        { id: 4, day: 0, time: 'Klo 13.35', title: 'Musiikkia opiskelun aikana', text: 'Haluat kuunnella musiikkia tietokoneelta samalla, kun teet opiskelutehtävää.', options: [
+          { text: 'Valitsen musiikkipalvelusta tutun soittolistan.', effects: { energy: 1 }, feedback: 'Tuttu soittolista voi piristää ilman pitkää kappaleiden etsimistä.' },
+          { text: 'Etsin musiikkipalvelusta pitkään uusia kappaleita.', effects: { focus: -1 }, feedback: 'Kappaleiden etsiminen voi viedä huomion opiskelutehtävästä.' },
+          { text: 'Suljen musiikkipalvelun ja opiskelen ilman musiikkia.', effects: { focus: 1 }, feedback: 'Eri ihmiset keskittyvät eri tavoin. Huomaa, mikä auttaa sinua.' }
+        ]},
+        { id: 5, day: 0, time: 'Klo 14.10', title: 'Puhelin värisee kesken työn', text: 'Olet saanut tietokoneella hyvän työrytmin.\nPuhelin värisee pöydällä uuden ilmoituksen takia.', options: [
+          { text: 'Avaan puhelimen ja tarkistan ilmoituksen heti.', effects: { focus: -2 }, feedback: 'Nopea vilkaisu puhelimeen voi katkaista hyvän työrytmin.' },
+          { text: 'Tarkistan puhelimen ilmoituksen seuraavalla tauolla.', effects: { focus: 2 }, feedback: 'Saat jatkaa tehtävää rauhassa ja tarkistaa ilmoituksen sopivassa kohdassa.' },
+          { text: 'Käännän puhelimen näytön alaspäin.', effects: { focus: 1 }, feedback: 'Kun ilmoitus ei näy, huomio pysyy helpommin tietokoneen tehtävässä.' }
+        ]},
+
+        { id: 6, day: 1, time: 'Klo 9.50', title: 'Pitkä aika tietokoneella', text: 'Olet tehnyt opiskelutehtäviä tietokoneella jo pitkään.\nSeuraava verkkotehtävä odottaa.', options: [
+          { text: 'Aloitan verkkotehtävän heti ilman taukoa.', effects: { energy: -1 }, feedback: 'Ilman taukoa vire voi laskea seuraavan verkkotehtävän aikana.' },
+          { text: 'Nousen tietokoneelta hetkeksi liikkeelle.', effects: { energy: 2 }, feedback: 'Lyhyt liike voi virkistää kehoa ja ajatuksia.' },
+          { text: 'Pidän tauon selaamalla somea puhelimella.', effects: {}, feedback: 'Puhelimen selaaminen ei anna taukoa ruudusta.' }
+        ]},
+        { id: 7, day: 1, time: 'Klo 11.25', title: 'Puhelin ruokatauolla', text: 'On ruokatauko.\nPuhelin on pöydällä, ja siinä on lyhytvideoita auki.', options: [
+          { text: 'Katson puhelimelta lyhytvideoita koko ruokailun ajan.', effects: {}, feedback: 'Saat viihdettä, mutta huomiosi pysyy ruudussa myös ruokatauolla.' },
+          { text: 'Laitan puhelimen pois ja syön ilman ruutua.', effects: { energy: 2 }, feedback: 'Ruokailu ilman puhelinta voi antaa aivoille pienen tauon.' },
+          { text: 'Vastaan puhelimella tärkeään viestiin ja laitan sen pois.', effects: { energy: 1, connection: 1 }, feedback: 'Hoidat tärkeän viestin ja jätät samalla tilaa ruuduttomalle tauolle.' }
+        ]},
+        { id: 8, day: 1, time: 'Klo 12.45', title: 'Verkkotehtävä jumittaa', text: 'Teet opiskelutehtävää tietokoneella.\nEt keksi, miten verkkotehtävässä pitäisi jatkaa.', options: [
+          { text: 'Jatkan verkkotehtävän yrittämistä ilman taukoa.', effects: { energy: -2 }, feedback: 'Pitkä jumittaminen tietokoneella voi kuluttaa voimia ilman, että ajatus etenee.' },
+          { text: 'Pidän tauon tietokoneelta ja yritän sitten uudelleen.', effects: { energy: 2, focus: 1 }, feedback: 'Tauko voi auttaa näkemään verkkotehtävän uudesta suunnasta.' },
+          { text: 'Avaan puhelimesta somen ja jätän tehtävän kesken.', effects: { focus: -2 }, feedback: 'Some vie ajatukset muualle, mutta verkkotehtävä jää odottamaan.' }
+        ]},
+        { id: 9, day: 1, time: 'Klo 13.30', title: 'Huono asento tietokoneella', text: 'Olet istunut pitkään tietokoneella samassa työasennossa.\nNiska ja selkä alkavat tuntua jäykiltä.', options: [
+          { text: 'Vaihdan työasentoa ja nousen tietokoneelta hetkeksi.', effects: { energy: 2 }, feedback: 'Asennon vaihtaminen ja pieni liike voivat virkistää.' },
+          { text: 'Jatkan tietokoneella samassa asennossa.', effects: { energy: -1 }, feedback: 'Sama työasento voi alkaa tuntua kehossa ja viedä voimia.' },
+          { text: 'Teen seuraavan tietokonetehtävän seisten, jos mahdollista.', effects: { energy: 1 }, feedback: 'Työasennon vaihtelu voi helpottaa pitkää tietokonepäivää.' }
+        ]},
+        { id: 10, day: 1, time: 'Klo 15.05', title: 'Lyhytvideot vievät tauon', text: 'Pidät taukoa opiskelusta ja avaat puhelimen lyhytvideosovelluksen.\nHuomaat katsoneesi jo monta videota peräkkäin.', options: [
+          { text: 'Katson puhelimelta vielä yhden lyhytvideon.', effects: { energy: -1 }, feedback: 'Lyhyistä videoista voi tulla pitkä ketju, joka ei tunnu tauolta.' },
+          { text: 'Suljen lyhytvideosovelluksen ja laitan puhelimen pois.', effects: { energy: 2 }, feedback: 'Hetki ilman puhelimen ruutua voi antaa tilaa palautua.' },
+          { text: 'Lähetän videon kaverille ja suljen sitten sovelluksen.', effects: { connection: 1, energy: 1 }, feedback: 'Jaat mukavan videon ja päätät samalla, milloin selaaminen loppuu.' }
+        ]},
+
+        { id: 11, day: 2, time: 'Klo 16.20', title: 'Kaverit kutsuvat verkkopeliin', text: 'Koulupäivä on ohi.\nKaverit pyytävät sinua yhteiseen verkkopeliin tietokoneella tai pelikonsolilla.', options: [
+          { text: 'Pelaan kavereiden kanssa verkkopeliä tunnin.', effects: { connection: 2, energy: 1 }, feedback: 'Yhteinen verkkopeli voi tukea hyvinvointia ja ystävyyssuhteita.' },
+          { text: 'Pelaan kavereiden kanssa verkkopeliä koko illan.', effects: { connection: 2, recovery: -2 }, feedback: 'Yhteinen pelaaminen on mukavaa, mutta pitkä peli-ilta voi lyhentää lepoa.' },
+          { text: 'Kerron peliryhmälle, etten tule verkkopeliin tänään.', effects: { recovery: 1 }, feedback: 'Saat aikaa muulle tekemiselle ja palautumiselle.' }
+        ]},
+        { id: 12, day: 2, time: 'Klo 18.10', title: 'Verkkopelin seuraava kierros', text: 'Pelaat verkossa muiden kanssa ja olet päättänyt lopettaa.\nPelin seuraava kierros alkaa kuitenkin heti.', options: [
+          { text: 'Pelaan verkkopelissä vielä yhden kierroksen.', effects: { recovery: -1 }, feedback: 'Yksi uusi pelikierros voi siirtää lopettamista yllättävän pitkälle.' },
+          { text: 'Poistun verkkopelistä suunnittelemaani aikaan.', effects: { recovery: 2 }, feedback: 'Pidät kiinni omasta lopetusajastasi, ja iltaan jää aikaa.' },
+          { text: 'Sovin itselleni verkkopeliin uuden lopetusajan.', effects: { recovery: 1 }, feedback: 'Uusi selkeä lopetusaika voi auttaa pitämään pelaamisen hallinnassa.' }
+        ]},
+        { id: 13, day: 2, time: 'Klo 19.00', title: 'Tappioita verkkopelissä', text: 'Häviät verkkopelissä monta kierrosta peräkkäin.\nHaluat yrittää heti uudelleen.', options: [
+          { text: 'Jatkan verkkopeliä niin kauan, että voitan.', effects: { energy: -2 }, feedback: 'Turhautuneena jatkaminen voi kuluttaa voimia lisää.' },
+          { text: 'Pidän tauon verkkopelistä.', effects: { energy: 2 }, feedback: 'Tauko voi rauhoittaa oloa ja helpottaa päätöstä jatkamisesta.' },
+          { text: 'Suljen verkkopelin ja teen hetken jotain muuta.', effects: { energy: 1 }, feedback: 'Toinen tekeminen voi katkaista turhautumisen kierteen.' }
+        ]},
+        { id: 14, day: 2, time: 'Klo 19.40', title: 'Kaveri asuu kaukana', text: 'Hyvä kaverisi asuu toisella paikkakunnalla.\nEtte voi tavata tänään kasvotusten.', options: [
+          { text: 'Soitamme puhelimella videopuhelun.', effects: { connection: 2 }, feedback: 'Videopuhelu voi auttaa pitämään yhteyttä myös kaukaa.' },
+          { text: 'Pelaamme yhdessä verkkopeliä.', effects: { connection: 2 }, feedback: 'Yhteinen verkkopeli voi olla tapa viettää aikaa yhdessä.' },
+          { text: 'En käytä digilaitetta, vaikka emme voi muuten tavata.', effects: { connection: -1 }, feedback: 'Kaikki ruutuaika ei ole samanlaista. Digitaalinen yhteydenpito voi tukea hyvinvointia.' }
+        ]},
+        { id: 15, day: 2, time: 'Klo 20.15', title: 'Pelaaminen pitkän ruutupäivän jälkeen', text: 'Koulussa oli paljon tietokoneella tehtävää.\nKotona tekisi mieli aloittaa heti verkkopeli.', options: [
+          { text: 'Aloitan verkkopelin heti kotiin tultuani.', effects: { energy: -1 }, feedback: 'Pitkän tietokonepäivän jälkeen vire voi kaivata ensin vaihtelua.' },
+          { text: 'Teen ensin jotain muuta ilman ruutua.', effects: { energy: 2 }, feedback: 'Muu tekeminen voi antaa tauon tietokoneen ja puhelimen ruuduista.' },
+          { text: 'Pidän ruuduttoman tauon ja aloitan verkkopelin sitten.', effects: { energy: 1, connection: 1 }, feedback: 'Tauko ja sen jälkeen yhteinen verkkopeli voivat mahtua samaan iltaan.' }
+        ]},
+
+        { id: 16, day: 3, time: 'Klo 15.30', title: 'Puhelimen ryhmäkeskustelu', text: 'Puhelimen ryhmäkeskusteluun tulee jatkuvasti uusia viestejä.\nSuurin osa viesteistä ei ole kiireellisiä.', options: [
+          { text: 'Seuraan puhelimen ryhmäkeskustelua koko ajan.', effects: { focus: -2, connection: 1 }, feedback: 'Pysyt keskustelussa mukana, mutta puhelimen viestit keskeyttävät muun tekemisen.' },
+          { text: 'Mykistän ryhmäkeskustelun ilmoitukset hetkeksi.', effects: { focus: 2 }, feedback: 'Sinun ei tarvitse seurata puhelimen ryhmäkeskustelua koko ajan.' },
+          { text: 'Tarkistan ryhmäkeskustelun puhelimesta myöhemmin.', effects: { focus: 1 }, feedback: 'Voit päättää itse, milloin annat ryhmäkeskustelulle huomiosi.' }
+        ]},
+        { id: 17, day: 3, time: 'Klo 16.10', title: 'Some vie mukanaan', text: 'Avasit puhelimen somesovelluksen katsoaksesi yhden asian.\nPuoli tuntia myöhemmin selaat sovellusta edelleen.', options: [
+          { text: 'Jatkan somen selaamista puhelimella.', effects: { energy: -1 }, feedback: 'Somen selaaminen voi jatkua huomaamatta ja viedä aikaa muulta.' },
+          { text: 'Suljen somesovelluksen puhelimesta.', effects: { energy: 1 }, feedback: 'Huomaat tilanteen ja päätät itse lopettaa somen selaamisen.' },
+          { text: 'Lopetan somen selaamisen ja palaan alkuperäiseen asiaan.', effects: { focus: 2 }, feedback: 'Alkuperäisen tavoitteen muistaminen auttaa suuntaamaan huomion takaisin.' }
+        ]},
+        { id: 18, day: 3, time: 'Klo 17.25', title: 'Kaveri ei vastaa viestisovelluksessa', text: 'Lähetit kaverille viestin puhelimen viestisovelluksessa.\nHän ei ole vastannut tuntiin.', options: [
+          { text: 'Lähetän viestisovelluksessa heti monta uutta viestiä.', effects: { connection: -1 }, feedback: 'Monta uutta viestiä voi tuntua kaverista painostavalta.' },
+          { text: 'Odotan vastausta ja laitan puhelimen pois.', effects: { energy: 1 }, feedback: 'Kaikkien ei tarvitse vastata puhelimen viesteihin heti. Sama koskee myös sinua.' },
+          { text: 'Jätän viestisovelluksen rauhaan ja teen jotain muuta.', effects: { energy: 2 }, feedback: 'Huomion siirtäminen pois puhelimesta voi vähentää turhaa odottamista.' }
+        ]},
+        { id: 19, day: 3, time: 'Klo 18.05', title: 'Yhteisen kuvan julkaiseminen somessa', text: 'Olet ottanut puhelimella hauskan kuvan kavereiden kanssa.\nHaluaisit julkaista kuvan somessa.', options: [
+          { text: 'Julkaisen yhteisen kuvan heti somessa.', effects: {}, feedback: 'Kuvassa on muitakin. Heillä voi olla oma mielipide kuvan julkaisemisesta somessa.' },
+          { text: 'Kysyn muilta luvan ennen kuvan julkaisemista somessa.', effects: { connection: 2 }, feedback: 'Luvan kysyminen osoittaa, että kunnioitat muiden toiveita.' },
+          { text: 'Jätän yhteisen kuvan julkaisematta somessa.', effects: {}, feedback: 'Kuva voi jäädä myös vain omaksi tai yhteiseksi muistoksi.' }
+        ]},
+        { id: 20, day: 3, time: 'Klo 20.30', title: 'Ikävä kommentti somessa', text: 'Joku kirjoittaa julkaisuusi ikävän kommentin somesovelluksessa.', options: [
+          { text: 'Aloitan kommentoijan kanssa pitkän riidan somessa.', effects: { energy: -2 }, feedback: 'Someriita voi jatkua pitkään ja kuormittaa oloa.' },
+          { text: 'Suljen somesovelluksen ja mietin myöhemmin, vastaanko.', effects: { energy: 2 }, feedback: 'Tauko somesta antaa aikaa rauhoittua ja valita, miten haluat toimia.' },
+          { text: 'Estän tai ilmoitan kommentoijan somesovelluksen työkalulla.', effects: { energy: 1 }, feedback: 'Sovelluksen työkaluilla voit suojata omaa tilaasi somessa.' }
+        ]},
+
+        { id: 21, day: 4, time: 'Klo 21.50', title: 'Puhelin sängyssä', text: 'Olet jo mennyt sänkyyn.\nSelaat puhelimella somea ja videoita.', options: [
+          { text: 'Jatkan somen ja videoiden selaamista puhelimella.', effects: { recovery: -1 }, feedback: 'Puhelimen selaaminen voi venyä, jolloin nukkumaanmeno siirtyy.' },
+          { text: 'Suljen sovellukset ja laitan puhelimen pois.', effects: { recovery: 2 }, feedback: 'Rauhoitat loppuillan ja annat unelle tilaa.' },
+          { text: 'Vastaan puhelimella yhteen tärkeään viestiin ja lopetan.', effects: { recovery: 1 }, feedback: 'Tärkeä viesti tulee hoidetuksi, ja päätät samalla puhelimen käytön.' }
+        ]},
+        { id: 22, day: 4, time: 'Klo 22.05', title: 'Vielä yksi jakso suoratoistopalvelusta', text: 'Katselet puhelimelta sarjaa suoratoistopalvelusta.\nKello on paljon, ja seuraava jakso alkaa automaattisesti.', options: [
+          { text: 'Katson puhelimelta suoratoistopalvelusta vielä yhden jakson.', effects: { recovery: -2 }, feedback: 'Seuraava sarjajakso puhelimella vie aikaa yöunelta.' },
+          { text: 'Suljen suoratoistopalvelun ja lopetan katsomisen tältä illalta.', effects: { recovery: 2 }, feedback: 'Päätät itse, milloin sarjan katsominen loppuu.' },
+          { text: 'Lisään jakson suoratoistopalvelun listalle huomiseksi.', effects: { recovery: 1 }, feedback: 'Sarjajakso odottaa myös huomenna, ja ilta voi rauhoittua.' }
+        ]},
+        { id: 23, day: 4, time: 'Klo 16.00', title: 'Viikonlopun digisuunnitelma', text: 'Olet käyttänyt viikon aikana paljon puhelinta ja tietokonetta.\nViikonloppu alkaa.', options: [
+          { text: 'Päätän olla koko viikonlopun ilman puhelinta ja tietokonetta.', effects: { connection: -1 }, feedback: 'Tiukka digilaitteiden kielto voi sulkea pois myös tärkeän yhteydenpidon.' },
+          { text: 'Suunnittelen etukäteen, milloin käytän digilaitteita viikonloppuna.', effects: { energy: 2 }, feedback: 'Oma suunnitelma auttaa jättämään aikaa myös muulle tärkeälle tekemiselle.' },
+          { text: 'Käytän puhelinta ja tietokonetta ilman erillistä suunnitelmaa.', effects: {}, feedback: 'Viikonlopun digilaitteiden käyttö etenee ilman omaa suunnitelmaa.' }
+        ]},
+        { id: 24, day: 4, time: 'Klo 19.15', title: 'Kaveri tarvitsee seuraa viestisovelluksessa', text: 'Olet päättänyt pitää puhelimen sivussa.\nKaveri lähettää viestisovelluksessa viestin ja haluaisi jutella.', options: [
+          { text: 'En vastaa kaverin viestiin, koska pidän puhelimen pois.', effects: { connection: -2 }, feedback: 'Tiukka puhelinsääntö voi estää myös tärkeän yhteydenpidon.' },
+          { text: 'Vastaan viestisovelluksessa ja juttelemme hetken.', effects: { connection: 2 }, feedback: 'Digihyvinvointi ei tarkoita puhelimen välttämistä. Myös yhteydenpito on tärkeää.' },
+          { text: 'Kerron viestillä, että palaan asiaan myöhemmin.', effects: { connection: 1, recovery: 1 }, feedback: 'Huomioit kaverin ja pidät samalla kiinni puhelintauostasi.' }
+        ]},
+        { id: 25, day: 4, time: 'Klo 22.30', title: 'Viikon viimeinen digivalinta', text: 'Viikko on takana, ja sinua väsyttää.\nPuhelimessa odottavat vielä videot, viestit ja mobiilipelit.', options: [
+          { text: 'Käytän puhelimen sovelluksia niin kauan kuin huvittaa.', effects: { recovery: -2, energy: -1 }, feedback: 'Puhelimen käyttö voi tuntua mukavalta, mutta väsyneenä pitkä ilta syö palautumista.' },
+          { text: 'Päätän kellonajan, jolloin lopetan puhelimen käytön.', effects: { recovery: 2, focus: 1 }, feedback: 'Selkeä lopetusaika auttaa rauhoittamaan iltaa.' },
+          { text: 'Vastaan tärkeisiin viesteihin ja laitan sitten puhelimen pois.', effects: { recovery: 2, connection: 1 }, feedback: 'Hoidat tärkeän yhteydenpidon ja jätät myös aikaa levolle.' }
+        ]}
+      ];
+
+      const REFLECTIONS = [
+        ['🧠', 'Vähennän keskeytyksiä.'],
+        ['🔋', 'Pidän enemmän taukoja.'],
+        ['🌙', 'Rauhoitan iltaa aikaisemmin.'],
+        ['👥', 'Pidän yhteyttä minulle tärkeisiin ihmisiin.'],
+        ['✓', 'Nykyinen tapani toimii minulle.']
+      ];
+
+      const STORAGE_KEY = 'digiviikko-game-v2';
+      const $ = selector => document.querySelector(selector);
+      const els = {
+        intro: $('#introScreen'), game: $('#gameScreen'), summary: $('#summaryScreen'),
+        start: $('#startButton'), continue: $('#continueButton'), restartTop: $('#restartTop'),
+        dayList: $('#dayList'), metricStack: $('#metricStack'), mobileDay: $('#mobileDay'),
+        mobileProgress: $('#mobileProgress'), mobileScores: $('#mobileScores'), progressCopy: $('#progressCopy'),
+        progressFill: $('#progressFill'), sceneTime: $('#sceneTime'), sceneTheme: $('#sceneTheme'),
+        sceneTitle: $('#sceneTitle'), sceneText: $('#sceneText'), choices: $('#choices'),
+        dayAnnouncement: $('#dayAnnouncement'), dayNumber: $('#dayNumber'), dayIcon: $('#dayIcon'),
+        dayAnnouncementTitle: $('#dayAnnouncementTitle'), dayTheme: $('#dayTheme'),
+        dayDescription: $('#dayDescription'), beginDay: $('#beginDayButton'), sceneArticle: $('#sceneArticle'),
+        resultPanel: $('#resultPanel'), effectList: $('#effectList'), feedback: $('#feedback'),
+        next: $('#nextButton'), scoreGrid: $('#scoreGrid'), summaryMessage: $('#summaryMessage'),
+        reflectionOptions: $('#reflectionOptions'), reflectionNote: $('#reflectionNote'), playAgain: $('#playAgain'),
+        live: $('#liveRegion')
+      };
+
+      let state = null;
+
+      function shuffle(items) {
+        const copy = [...items];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      function buildWeek() {
+        const ids = [];
+        for (let day = 0; day < 4; day++) {
+          ids.push(...shuffle(SITUATIONS.filter(item => item.day === day)).map(item => item.id));
+        }
+        ids.push(...shuffle(SITUATIONS.filter(item => item.day === 4 && item.id !== 25)).map(item => item.id));
+        ids.push(25);
+        return ids;
+      }
+
+      function freshState() {
+        return { screen: 'game', phase: 'day', week: buildWeek(), index: 0, scores: { focus: 5, energy: 5, recovery: 5, connection: 5 }, answered: false, choice: null, reflection: null };
+      }
+
+      function clamp(value) { return Math.max(0, Math.min(10, value)); }
+      function currentSituation() { return SITUATIONS.find(item => item.id === state.week[state.index]); }
+      function currentDay() { return currentSituation().day; }
+
+      function save() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (_) { /* Peli toimii myös ilman tallennustilaa. */ }
+      }
+
+      function load() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          const validWeek = saved && Array.isArray(saved.week) && saved.week.length === 25 && new Set(saved.week).size === 25 && saved.week.every(id => SITUATIONS.some(item => item.id === id));
+          const correctDays = validWeek && saved.week.every((id, index) => SITUATIONS.find(item => item.id === id).day === Math.floor(index / 5));
+          const valid = correctDays && saved.scores && Number.isInteger(saved.index) && saved.index >= 0 && saved.index < 25 && ['day', 'situation'].includes(saved.phase);
+          return valid ? saved : null;
+        } catch (_) { return null; }
+      }
+
+      function clearSave() {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (_) { /* Ei estä peliä. */ }
+      }
+
+      function showScreen(name) {
+        [els.intro, els.game, els.summary].forEach(el => el.classList.remove('active'));
+        ({ intro: els.intro, game: els.game, summary: els.summary })[name].classList.add('active');
+        els.restartTop.hidden = name === 'intro';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function startFresh() {
+        state = freshState();
+        save();
+        showScreen('game');
+        renderGame();
+      }
+
+      function resume() {
+        const saved = load();
+        if (!saved) return startFresh();
+        state = saved;
+        if (state.screen === 'summary') {
+          showScreen('summary');
+          renderSummary();
+        } else {
+          showScreen('game');
+          renderGame();
+        }
+      }
+
+      function renderDays(day) {
+        els.dayList.innerHTML = DAYS.map((item, index) => {
+          const status = index < day ? 'done' : index === day ? 'current' : '';
+          const mark = index < day ? '✓' : index + 1;
+          return `<div class="day-item ${status}" ${index === day ? 'aria-current="step"' : ''}><span class="day-dot">${mark}</span><span>${item.name}</span></div>`;
+        }).join('');
+      }
+
+      function renderMetrics(changed = []) {
+        els.metricStack.innerHTML = Object.entries(METRICS).map(([key, metric]) => `
+          <div class="metric-row ${changed.includes(key) ? 'bump' : ''}" style="--metric-color:${metric.color}">
+            <div class="metric-head"><span class="metric-name"><span aria-hidden="true">${metric.icon}</span>${metric.name}</span><span class="metric-value">${state.scores[key]}/10</span></div>
+            <div class="meter" role="meter" aria-label="${metric.name}" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${state.scores[key]}"><span style="width:${state.scores[key] * 10}%"></span></div>
+          </div>`).join('');
+        els.mobileScores.innerHTML = Object.entries(METRICS).map(([key, metric]) => `<div class="mobile-score" aria-label="${metric.name} ${state.scores[key]} / 10"><span aria-hidden="true">${metric.icon}</span><strong>${state.scores[key]}/10</strong></div>`).join('');
+      }
+
+      function effectLabel(key, amount) {
+        const sign = amount > 0 ? '+' : '';
+        return `${METRICS[key].icon} ${METRICS[key].name} ${sign}${amount}`;
+      }
+
+      function nextLabel() {
+        if (state.index === 24) return 'Katso viikon yhteenveto →';
+        const nowDay = currentDay();
+        const nextSituation = SITUATIONS.find(item => item.id === state.week[state.index + 1]);
+        return nextSituation.day !== nowDay ? `Siirry päivään: ${DAYS[nextSituation.day].name} →` : 'Seuraava tilanne →';
+      }
+
+      function renderDayAnnouncement(day) {
+        const dayInfo = DAYS[day];
+        els.dayAnnouncement.hidden = false;
+        els.sceneArticle.hidden = true;
+        els.mobileDay.textContent = `${dayInfo.name} · ${dayInfo.theme}`;
+        els.mobileProgress.textContent = `Päivä ${day + 1} / 5`;
+        els.progressCopy.textContent = `Päivä ${day + 1} / 5`;
+        els.progressFill.style.width = `${(state.index / 25) * 100}%`;
+        els.dayNumber.textContent = `Päivä ${day + 1} / 5`;
+        els.dayIcon.textContent = dayInfo.icon;
+        els.dayAnnouncementTitle.textContent = dayInfo.name;
+        els.dayTheme.textContent = dayInfo.theme;
+        els.dayDescription.textContent = dayInfo.description;
+        els.beginDay.innerHTML = `Aloita ${dayInfo.name.toLowerCase()} <span aria-hidden="true">→</span>`;
+        els.live.textContent = `${dayInfo.name}. Päivän teema: ${dayInfo.theme}. ${dayInfo.description}`;
+        requestAnimationFrame(() => els.dayAnnouncementTitle.focus({ preventScroll: true }));
+      }
+
+      function renderGame(changed = []) {
+        const situation = currentSituation();
+        const day = situation.day;
+        renderDays(day);
+        renderMetrics(changed);
+        if (state.phase === 'day') {
+          renderDayAnnouncement(day);
+          return;
+        }
+        els.dayAnnouncement.hidden = true;
+        els.sceneArticle.hidden = false;
+        els.mobileDay.textContent = `${DAYS[day].name} · ${DAYS[day].theme}`;
+        els.mobileProgress.textContent = `${state.index + 1} / 25`;
+        els.progressCopy.textContent = `Tilanne ${state.index + 1} / 25`;
+        els.progressFill.style.width = `${((state.index + (state.answered ? 1 : 0)) / 25) * 100}%`;
+        els.sceneTime.textContent = situation.time;
+        els.sceneTheme.textContent = `${DAYS[day].name} · ${DAYS[day].theme}`;
+        els.sceneTitle.textContent = situation.title;
+        els.sceneText.textContent = situation.text;
+        els.choices.innerHTML = '';
+
+        situation.options.forEach((option, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'choice';
+          button.innerHTML = `<span class="choice-letter" aria-hidden="true">${String.fromCharCode(65 + index)}</span><span class="choice-text"></span>`;
+          button.querySelector('.choice-text').textContent = option.text;
+          button.addEventListener('click', () => choose(index));
+          if (state.answered) {
+            button.disabled = true;
+            button.classList.add(index === state.choice ? 'chosen' : 'dimmed');
+            if (index === state.choice) button.setAttribute('aria-pressed', 'true');
+          }
+          els.choices.appendChild(button);
+        });
+
+        if (state.answered) {
+          const option = situation.options[state.choice];
+          renderResult(option);
+        } else {
+          els.resultPanel.classList.remove('show');
+          els.effectList.innerHTML = '';
+          els.feedback.textContent = '';
+        }
+      }
+
+      function beginDay() {
+        if (!state || state.phase !== 'day') return;
+        state.phase = 'situation';
+        save();
+        renderGame();
+        requestAnimationFrame(() => els.sceneTitle.focus({ preventScroll: true }));
+      }
+
+      function choose(index) {
+        if (state.phase !== 'situation' || state.answered) return;
+        const option = currentSituation().options[index];
+        const changed = Object.keys(option.effects);
+        Object.entries(option.effects).forEach(([key, amount]) => { state.scores[key] = clamp(state.scores[key] + amount); });
+        state.answered = true;
+        state.choice = index;
+        save();
+        renderGame(changed);
+        const spoken = changed.length ? changed.map(key => effectLabel(key, option.effects[key])).join(', ') : 'Ei muutosta mittareihin';
+        els.live.textContent = `Valinnan vaikutus: ${spoken}. ${option.feedback}`;
+        requestAnimationFrame(() => els.resultPanel.focus({ preventScroll: true }));
+        els.resultPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function renderResult(option) {
+        const effects = Object.entries(option.effects);
+        els.effectList.innerHTML = effects.length ? effects.map(([key, amount]) => `<span class="effect-chip ${amount > 0 ? 'positive' : 'negative'}">${effectLabel(key, amount)}</span>`).join('') : '<span class="effect-chip">Mittarit eivät muuttuneet</span>';
+        els.feedback.textContent = option.feedback;
+        els.next.innerHTML = nextLabel();
+        els.resultPanel.classList.add('show');
+      }
+
+      function goNext() {
+        if (!state || state.phase !== 'situation' || !state.answered) return;
+        if (state.index >= 24) {
+          state.screen = 'summary';
+          save();
+          showScreen('summary');
+          renderSummary();
+          return;
+        }
+        const previousDay = currentDay();
+        state.index += 1;
+        state.answered = false;
+        state.choice = null;
+        state.phase = currentDay() !== previousDay ? 'day' : 'situation';
+        save();
+        renderGame();
+        if (state.phase === 'day') {
+          els.dayAnnouncement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          els.sceneArticle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          requestAnimationFrame(() => els.sceneTitle.focus({ preventScroll: true }));
+        }
+      }
+
+      function scoreText(key, value) {
+        const texts = {
+          focus: value >= 8 ? 'Löysit hyvin keinoja suojata työrauhaa.' : value >= 5 ? 'Keskittyminen pysyi melko tasaisena.' : 'Keskeytyksiä kertyi viikon aikana.',
+          energy: value >= 8 ? 'Tauot ja vaihtelu tukivat jaksamista.' : value >= 5 ? 'Jaksaminen säilyi melko tasaisena.' : 'Pitkä tekeminen ilman taukoja vei voimia.',
+          recovery: value >= 8 ? 'Iltoihin jäi hyvin tilaa palautumiselle.' : value >= 5 ? 'Palautuminen pysyi melko tasaisena.' : 'Myöhäiset valinnat vähensivät lepoa.',
+          connection: value >= 8 ? 'Digivälineet tukivat yhteydenpitoa.' : value >= 5 ? 'Yhteydenpito pysyi mukana viikossa.' : 'Yhteydenpidolle jäi tällä viikolla vähemmän tilaa.'
+        };
+        return texts[key];
+      }
+
+      function renderSummary() {
+        renderMetrics();
+        els.scoreGrid.innerHTML = Object.entries(METRICS).map(([key, metric]) => `
+          <article class="score-card" style="--accent:${metric.color}">
+            <div class="score-top"><span class="score-icon" aria-hidden="true">${metric.icon}</span><span class="score-number">${state.scores[key]}/10</span></div>
+            <div class="score-name">${metric.name}</div>
+            <p class="score-note">${scoreText(key, state.scores[key])}</p>
+          </article>`).join('');
+
+        const entries = Object.entries(state.scores);
+        const avg = entries.reduce((sum, [, value]) => sum + value, 0) / entries.length;
+        const sorted = [...entries].sort((a, b) => a[1] - b[1]);
+        const low = sorted[0], high = sorted[sorted.length - 1];
+        const spread = high[1] - low[1];
+        let heading = avg >= 7 && spread <= 3 ? 'Digiviikkosi oli tasapainoinen.' : avg >= 5 ? 'Digiviikossasi oli erilaisia painotuksia.' : 'Digiviikko tuntui melko kuormittavalta.';
+        let body;
+        if (spread <= 1) {
+          body = 'Kaikki neljä mittaria pysyivät lähellä toisiaan. Tasapaino ei tarkoita täydellisyyttä, vaan omiin tilanteisiin sopivia valintoja.';
+        } else {
+          body = `${METRICS[high[0]].name} nousi viikon vahvimmaksi mittariksi. ${METRICS[low[0]].name.toLowerCase()} jäi muita alemmaksi. Se ei ole epäonnistuminen, vaan yksi asia, jota voit halutessasi kokeilla toisin.`;
+        }
+        els.summaryMessage.innerHTML = `<h3>${heading}</h3><p>${body}</p>`;
+
+        els.reflectionOptions.innerHTML = '';
+        REFLECTIONS.forEach(([icon, text], index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `reflection-option ${state.reflection === index ? 'selected' : ''}`;
+          button.innerHTML = `<span aria-hidden="true">${icon}</span> `;
+          button.append(document.createTextNode(text));
+          button.setAttribute('aria-pressed', state.reflection === index ? 'true' : 'false');
+          button.addEventListener('click', () => selectReflection(index));
+          els.reflectionOptions.appendChild(button);
+        });
+        els.reflectionNote.textContent = state.reflection === null ? '' : state.reflection === 4 ? 'Hyvä. Sinä tunnet oman arkesi parhaiten.' : 'Hyvä kokeilu. Pieni muutos riittää alkuun.';
+      }
+
+      function selectReflection(index) {
+        state.reflection = index;
+        save();
+        [...els.reflectionOptions.children].forEach((button, i) => {
+          button.classList.toggle('selected', i === index);
+          button.setAttribute('aria-pressed', i === index ? 'true' : 'false');
+        });
+        els.reflectionNote.textContent = index === 4 ? 'Hyvä. Sinä tunnet oman arkesi parhaiten.' : 'Hyvä kokeilu. Pieni muutos riittää alkuun.';
+      }
+
+      function confirmRestart() {
+        if (!state || window.confirm('Aloitetaanko viikko alusta? Nykyinen eteneminen poistuu.')) {
+          clearSave();
+          startFresh();
+        }
+      }
+
+      els.start.addEventListener('click', startFresh);
+      els.continue.addEventListener('click', resume);
+      els.beginDay.addEventListener('click', beginDay);
+      els.next.addEventListener('click', goNext);
+      els.playAgain.addEventListener('click', () => { clearSave(); startFresh(); });
+      els.restartTop.addEventListener('click', confirmRestart);
+
+      const saved = load();
+      els.continue.hidden = !saved;
+      if (saved && saved.screen === 'summary') els.continue.textContent = 'Palaa viikon yhteenvetoon';
+    })();
+  </script>
+</body>
+</html>
